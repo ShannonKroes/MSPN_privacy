@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 """
+Created on Thu Aug  5 13:31:21 2021
+
+@author: Shannon
+"""
+
+"""
 Created on Fri Feb 19 18:44:34 2021
-
 @author: Shannon Kroes
-
 In this file the functions are included to generate data,
 compute privacy, compute information loss and run the simulations.
-
 throughout this file we use
 n = number of samples (e.g. health records/people)
 d = number of variables
 levels= number of values each value can take on
 ordered= whether each variable has a natural ordering (binary and categorical variables do not, whereas continuous or count variables do)
-
 """
 
 # -*- coding: utf-8 -*-
 import os
 
 
-os.chdir(r"C:\Users\shann\Documents\Sanquin\Project 4\SPN\Simulation\DSLab")
 current_wd = os.getcwd()
 
 
@@ -176,8 +177,9 @@ class Simulation():
             
 
         elif self.distr=="categorical":
-            params= np.array([0.2, 0.3, 0.4, 0.5, 0.6,.2, 1/7, 1/7])
+            #params= np.array([0.2, 0.3, 0.4, 0.5, 0.6,.2, 1/7, 1/7])
 
+            params= np.concatenate([[0.2, 0.3, 0.4, 0.5, 0.6,.2,.2], np.repeat(1/7,12)])
                      
             CDF_values= self.generate_correlated_normal()
             t_CDF_values= np.transpose(CDF_values)
@@ -186,30 +188,28 @@ class Simulation():
             if self.logistic==True:
                 evar=0
             else:
-                evar=2.478
+                evar=1.172
             
             levels= np.concatenate([np.repeat(1, 5),[ 2, 6, 6]])
             X= np.empty((8,self.n), dtype=float)
             
-            for i in range(8):
-                X[i]= binom.ppf(t_CDF_values[i],levels[i],params[i])
-            
-            # probability of 1 for each variable  
-            probs= np.zeros((self.d-1))  
-            
+               
+                
+            param_inds= np.concatenate([np.zeros(1), np.cumsum(levels)])
 
             for i in range(8):
-                for j in range(levels[i]):
-                    ind_wide=np.sum(levels[0:i])+j
-                    probs[ind_wide]= binom.pmf(j+1,levels[i],params[i])
                 
-            sds=  np.sqrt(probs*(1-probs))
+                X[i]= np.digitize(t_CDF_values[i],np.cumsum(params[int(param_inds[i]):int(param_inds[i+1])]))
 
             X= np.transpose(X)
+            sds= np.sqrt(params*(1-params))
+                
+            
+
 
                    
         elif self.distr=="mixed":
-            params= np.array([15,4,15,6,.3, .2, 1/7,.1])
+            params= np.concatenate([[15,4,15,6, 0.3,.2,.3], np.repeat(1/7,6), [.1]])
             bin_ind_short= range(4,8)
                                  
             CDF_values= self.generate_correlated_normal()
@@ -220,34 +220,40 @@ class Simulation():
             X4= poisson.ppf(t_CDF_values[3], 6).reshape(self.n,1)
                   
             levels= np.concatenate([np.repeat(1, 4),[ 1,2,6,1]])
-
+            bin_params=params[4:]
+            bin_levels= levels[bin_ind_short]
+            param_inds= np.concatenate([np.zeros(1), np.cumsum(bin_levels)])
+           
             X_bin= np.empty((len(bin_ind_short),self.n), dtype=float)
             for i in range(len(bin_ind_short)):
-                X_bin[i]= binom.ppf(t_CDF_values[bin_ind_short][i],levels[bin_ind_short][i],params[bin_ind_short][i])
-            
+                X_bin[i]= np.digitize(t_CDF_values[i],np.cumsum(bin_params[int(param_inds[i]):int(param_inds[i+1])]))
+
             X=  np.hstack([X1, X2, X3, X4, np.transpose(X_bin)])
               
             if self.sparse==True:
                 if self.logistic==True:
                     evar=0.298
                 else:
-                    evar=3.445
+                    evar=1.395
             else:
                 if self.logistic==True:
                     evar=0.343
                 else:
-                    evar=3.445
+                    #evar=3.445
+                    evar=2.122
                     
-            probs= np.zeros((10))  
+
+
             sds= np.zeros(self.d-1)
-            sds[range(4)]= [15,4,14,np.sqrt(6)]
-            
-            for i in range(len(bin_ind_short)):
-                for j in range(levels[bin_ind_short][i]):
-                    ind_wide=np.sum(levels[bin_ind_short][0:i])+j
-                    probs[ind_wide]= binom.pmf(j+1,levels[bin_ind_short][i],params[bin_ind_short][i])
-                
-            sds[range(4,self.d-1)]=  np.sqrt(probs*(1-probs))
+            sds[0]=15
+            sds[1]= 4
+            sds[2]=15
+            sds[3]=np.sqrt(6)
+            sds[4:]= params[4:]*(1-params[4:])
+
+
+
+
 
         return [X, sds, evar, levels]      
         
@@ -271,7 +277,14 @@ class Simulation():
             params= np.concatenate([[15,4,15,6, 0.3,.2,.3], np.repeat(1/7,6), [.1]])
             sds= np.zeros(self.d-1)
             
-            
+            # we have to replace this with the true sds
+            sds[0]=15
+            sds[1]= 4
+            sds[2]=15
+            sds[3]=np.sqrt(6)
+            sds[4:]= params[4:]*(1-params[4:])
+          
+                       
             levels= np.concatenate([np.repeat(1, 4),[ 1,2,6,1]])
 
         return [sds, levels]  
@@ -308,7 +321,7 @@ class Simulation():
         betas_raw_levels= betas_raw/levels_long
         betas= betas_raw_levels/sds
 
-        if self.sparse==True:
+        if self.sparse:
             betas[1]=0                       
             betas[range(7,14)]=0                       
                       
@@ -324,7 +337,6 @@ class Simulation():
             # sample 0 and 1 with these probabilities
             Y= map(self.sample_bin, self.logit(Y))
         
-        
         data= np.hstack([X_wide, np.round(Y,2).reshape(self.n,1)])        
                         
         levels= np.concatenate([levels,np.ones(1)])
@@ -334,6 +346,7 @@ class Simulation():
         
     @property
     def true_param(self):
+        
         sds, levels= self.sds_levels()
         
         if self.H0==True:
@@ -348,14 +361,15 @@ class Simulation():
             else: 
                 beta_raw=0.3
                 intercept=0
-            if self.sparse==True:
-                beta_raw[2,7,8]=0    
-            
         levels_long= np.concatenate(np.asarray(list(map(lambda x: np.repeat(x,x), levels))))
         betas_raw=np.repeat(beta_raw, sum(levels))
         betas_raw_levels= betas_raw/levels_long
         betas= betas_raw_levels/sds 
         true_param=betas[0]
+    
+    
+    
+    
         return true_param
     
     
@@ -840,7 +854,7 @@ def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=10
 
 
 
-def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None, p_reps=500, distr="normal", mis=100, priv_or_runs=0, priv_an_runs=0, rows=None, H0=False,  or_res=True, pois_real=False, threshold=0.3, leaves=None, toround=True, save=True, cpus=-1, cor_univ=True, col_test="rdc",  hist_source="numpy", cols="rdc", save_inter=True, pois_allreal=False, non_parametric=True, no_tests=100):    
+def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None, p_reps=500, distr="normal", sparse=False, mis=100, priv_or_runs=0, priv_an_runs=0, rows=None, H0=False,  or_res=True, pois_real=False, threshold=0.3, leaves=None, toround=True, save=True, cpus=-1, cor_univ=True, col_test="rdc",  hist_source="numpy", cols="rdc", save_inter=True, pois_allreal=False, non_parametric=True, no_tests=100, no_clusters=2, standardize=False, ecdf=False):    
 
     # we can make a distinction for the input between:
     # 1. generic simulation settings
@@ -875,7 +889,7 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     # cols: the splitting method chosen to split variables (vertical splitting), see spn\algorithms\splitting\RDC.py for the options
     
     
-    sim=Simulation(n=n, distr=distr,pois_real=pois_real, pois_allreal= pois_allreal, H0=H0, non_parametric=non_parametric)
+    sim=Simulation(n=n, distr=distr,pois_real=pois_real, pois_allreal= pois_allreal, H0=H0, non_parametric=non_parametric, sparse=sparse)
     true_param= sim.true_param
 
 
@@ -925,6 +939,15 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
 
     x_ind= range(0,wide_d-1)
     np.random.seed(seed)
+    
+    if distr!="mixed":
+        Distr=distr
+    elif sparse:
+        Distr="mixed_sparse"
+    else: 
+        Distr="mixed"
+        
+        
     for s in range(repetitions):
         
         np.random.seed(seed+s)
@@ -959,8 +982,7 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
         ds_context=sim.ds_context()
         ds_context.add_domains(data)
 
-        
-        mspn = learn_mspn(data, ds_context, min_instances_slice=mis, rows=rows, threshold=threshold, leaves=leaves, cpus=cpus, hist_source=hist_source, col_test=col_test, cols=cols)    
+        mspn = learn_mspn(data, ds_context, min_instances_slice=mis, rows=rows, threshold=threshold, leaves=leaves, cpus=cpus, hist_source=hist_source, col_test=col_test, cols=cols, no_clusters=no_clusters, standardize=standardize, ecdf=ecdf)    
 
         # Use this function to 1. create anonymized data with the MSPN and 2. Perform the regression and extract the parameters. 
         estimates_an[s], SEs_an[s], AN=perform_regression_on_anonymized_data(mspn, an_sample_size, data, x_ind, seed=seed+s, toround=toround, sim=sim)
@@ -1014,9 +1036,8 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
             if pois_allreal:
                 pois="pois_allreal"
             
-            
-            # save output as object
-            name= str(H)+ str(distr)+'n'+str(n)+'mis'+str(mis)+str(rows)+'col_test'+col_test+'t'+ str(threshold)+pois+'col_test'+col_test+'hist_source'+hist_source+"an_sample_size"+str(an_sample_size)+"_"+str(repetitions)+"repetitions"+"save_inter"
+           # save output as object
+            name= str(H)+ str(Distr)+'n'+str(n)+'mis'+str(mis)+str(rows)+'col_test'+col_test+'t'+ str(threshold)+pois+'col_test'+col_test+'hist_source'+hist_source+"an_sample_size"+str(an_sample_size)+"no_clusters="+str(no_clusters)+"_"+"standardize"+str(standardize)+"ecdf"+str(ecdf)+str(repetitions)+"repetitions"+"save_inter"
         
             result=[RMSE_an,  RMSE_or,  estimates_an,   estimates_or, bias_an,   bias_or, SE_mean_an, SE_mean_or,SEs_an ,SEs_or, raw_cor_diff, abs_cor_diff, univ_same_prop, privacy,  privacy_original, s, mspn, name]
             save_object(result, name)
@@ -1030,7 +1051,7 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
             file1.close() 
         
 
-        print(s, "n =", n, "mis=", mis, "distr=", distr, "rows=", rows, "threshold=", threshold, pois , "H0=", H0, "col_test=",col_test, "hist_source=", hist_source)        
+        print(s, "n =", n, "mis=", mis, "distr=", Distr, "sparse=", sparse, "rows=", rows, "threshold=", threshold, pois , "H0=", H0, "col_test=",col_test, "hist_source=", hist_source, "no_clusters=", no_clusters)        
         
     RMSE_or=  np.sqrt(np.mean((estimates_or-true_param)**2)) 
     bias_or= np.mean(estimates_or-true_param)
@@ -1046,8 +1067,7 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     abs_cor_diff=np.mean(raw_diffs)
         
     
-    
-    
+        
     
     # save some of the characteristics of the mspn
     print(get_structure_stats(mspn))
@@ -1055,7 +1075,7 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     H='H1'
     if H0==True: H='H0' 
     # save output as object
-    name= str(H)+ str(distr)+'n'+str(n)+'mis'+str(mis)+str(rows)+'t'+ str(threshold)+pois+'col_test'+col_test+'hist_source'+hist_source+"an_sample_size"+str(an_sample_size)+"_"+str(repetitions)+"repetitions "
+    name= str(H)+ str(Distr)+'n'+str(n)+'mis'+str(mis)+str(rows)+'t'+ str(threshold)+pois+'col_test'+col_test+'hist_source'+hist_source+"an_sample_size"+str(an_sample_size)+"_"+"standardize"+str(standardize)+"ecdf"+str(ecdf)+str(no_clusters)+"_clusters="+str(repetitions)+"repetitions"
 
     if save:           
         result=[RMSE_an,  RMSE_or,  estimates_an,   estimates_or, bias_an,   bias_or, SE_mean_an, SE_mean_or,SEs_an ,SEs_or, raw_cor_diff, abs_cor_diff, univ_same_prop,privacy,  privacy_original, name]
@@ -1067,7 +1087,6 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
         file1.write(paste_results(result))
 
 
-        file1.close() 
     
     result=[RMSE_an,  RMSE_or,  estimates_an, estimates_or, bias_an, bias_or, SEs_an ,SEs_or, SE_mean_an, SE_mean_or, raw_cor_diff, abs_cor_diff, univ_same_prop, privacy,  privacy_original, cor_diffs, raw_diffs, univs, data, mspn, name]     
         
@@ -1348,5 +1367,3 @@ def compute_CI_or(result):
     upper_bound= np.mean(result[3])+2*np.std(result[3])/np.sqrt(no_reps)
     
     return [lower_bound, upper_bound]
-
-
