@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 06 23:13:42 2021
+@author: Shannon Kroes
+In this file the functions are included to generate data,
+compute privacy, compute information loss and run the simulations.
+throughout this file we use
+n = number of samples (e.g. health records/people)
+d = number of variables
+levels= number of values each value can take on
+ordered= whether each variable has a natural ordering (binary and categorical variables do not, whereas continuous or count variables do)
+"""
+
+
 import copy
 import math
 
