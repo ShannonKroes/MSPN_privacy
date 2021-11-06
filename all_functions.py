@@ -72,12 +72,12 @@ class Simulation():
             d=20
         return d
     
-    def sample_bin(p):
+    def sample_bin(self, p):
             x=np.random.choice([0, 1], size=1, p=[1-p,p])
             return x
     
    
-    def logit(x):
+    def logit(self, x):
         return np.log(x/(1-x))
         
         
