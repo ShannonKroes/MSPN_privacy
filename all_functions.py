@@ -20,9 +20,7 @@ ordered= whether each variable has a natural ordering (binary and categorical va
 # -*- coding: utf-8 -*-
 import os
 
-
 current_wd = os.getcwd()
-
 
 import matplotlib.pyplot as plt
 import spn as spn
@@ -38,6 +36,7 @@ from sklearn import linear_model
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+from spn.algorithms.Inference import log_likelihood
 from spn.algorithms.Statistics import get_structure_stats
 import statsmodels.api as sm
 from scipy.stats import ks_2samp
@@ -60,6 +59,8 @@ class Simulation():
         self.pois_real=pois_real
         self.pois_allreal=pois_allreal
         self.non_parametric= non_parametric
+
+
     @property
     def d(self):
         # this value d is the number of variables if the data are in its wide format
@@ -71,12 +72,13 @@ class Simulation():
         elif self.distr=="categorical":
             d=20
         return d
-    
+
+
     def sample_bin(self, p):
             x=np.random.choice([0, 1], size=1, p=[1-p,p])
             return x
-    
-   
+
+
     def logit(self, x):
         return np.log(x/(1-x))
         
@@ -102,10 +104,10 @@ class Simulation():
             result=copy.deepcopy(CDF_values)
         else:
             result= np.round(X,2)
-            
         
         return result
-        
+
+
     def ordered(self):
         # a function that indicates which variable is ordered
         # which is needed to transform the data from narrow to wide
@@ -119,7 +121,8 @@ class Simulation():
             ordered= np.concatenate([np.ones(4), np.zeros(self.d-5), np.ones(1)])
             
         return ordered
-    
+
+
     def ordered_narrow(self):
         # a function that indicates which variable is ordered
         # which is needed to select an appropriate privacy metric
@@ -133,7 +136,8 @@ class Simulation():
             ordered= np.concatenate([np.ones(3), np.zeros(5), np.ones(1)])
             
         return ordered
-    
+
+
     def is_discrete(self):
         # a function that indicates which variable is ordered
         # which is needed to select an appropriate privacy metric
@@ -162,7 +166,6 @@ class Simulation():
                 evar=5.208
             X= self.generate_correlated_normal(CDF=False)
             levels=np.repeat(1, self.d-1)
-            
 
         elif self.distr=="poisson":
             params= np.array([1,1,1,4,4,4,10,10])
@@ -173,8 +176,7 @@ class Simulation():
                 evar=4.95
             CDF_values= self.generate_correlated_normal()
             X= poisson.ppf(CDF_values, params)
-            levels=np.repeat(1, self.d-1)                    
-            
+            levels=np.repeat(1, self.d-1)
 
         elif self.distr=="categorical":
             #params= np.array([0.2, 0.3, 0.4, 0.5, 0.6,.2, 1/7, 1/7])
@@ -184,7 +186,6 @@ class Simulation():
             CDF_values= self.generate_correlated_normal()
             t_CDF_values= np.transpose(CDF_values)
             
-            
             if self.logistic==True:
                 evar=0
             else:
@@ -192,9 +193,7 @@ class Simulation():
             
             levels= np.concatenate([np.repeat(1, 5),[ 2, 6, 6]])
             X= np.empty((8,self.n), dtype=float)
-            
-               
-                
+
             param_inds= np.concatenate([np.zeros(1), np.cumsum(levels)])
 
             for i in range(8):
@@ -203,11 +202,7 @@ class Simulation():
 
             X= np.transpose(X)
             sds= np.sqrt(params*(1-params))
-                
-            
 
-
-                   
         elif self.distr=="mixed":
             params= np.concatenate([[15,4,15,6, 0.3,.2,.3], np.repeat(1/7,6), [.1]])
             bin_ind_short= range(4,8)
@@ -241,8 +236,6 @@ class Simulation():
                 else:
                     #evar=3.445
                     evar=2.122
-                    
-
 
             sds= np.zeros(self.d-1)
             sds[0]=15
@@ -250,10 +243,6 @@ class Simulation():
             sds[2]=15
             sds[3]=np.sqrt(6)
             sds[4:]= params[4:]*(1-params[4:])
-
-
-
-
 
         return [X, sds, evar, levels]      
         
@@ -265,8 +254,7 @@ class Simulation():
         if self.distr=="poisson":
             params= np.array([1,1,1,4,4,4,10,10])
             sds= np.sqrt(params)
-            levels=np.repeat(1, self.d-1)                    
-           
+            levels=np.repeat(1, self.d-1)
             
         if self.distr=="categorical":
             params= np.concatenate([[0.2, 0.3, 0.4, 0.5, 0.6,.2,.2], np.repeat(1/7,12)])
@@ -283,8 +271,7 @@ class Simulation():
             sds[2]=15
             sds[3]=np.sqrt(6)
             sds[4:]= params[4:]*(1-params[4:])
-          
-                       
+
             levels= np.concatenate([np.repeat(1, 4),[ 1,2,6,1]])
 
         return [sds, levels]  
@@ -308,7 +295,6 @@ class Simulation():
                 else:
                     X_wide.T[ind_wide]= X.T[i]      
 
-        
         if self.logistic==True:
             beta_raw=-.19
             intercept=-.85
@@ -323,8 +309,7 @@ class Simulation():
 
         if self.sparse:
             betas[1]=0                       
-            betas[range(7,14)]=0                       
-                      
+            betas[range(7,14)]=0
     
         if self.H0==True:
             betas[0]=0
@@ -366,14 +351,10 @@ class Simulation():
         betas_raw_levels= betas_raw/levels_long
         betas= betas_raw_levels/sds 
         true_param=betas[0]
-    
-    
-    
-    
+
         return true_param
     
-    
-         
+
     def ds_context(self):
 
         if self.non_parametric==True:
@@ -391,8 +372,7 @@ class Simulation():
             elif self.distr=="mixed":
                 ds_context=Context(meta_types=np.concatenate([[MetaType.REAL,MetaType.REAL,MetaType.REAL,MetaType.REAL],np.repeat(MetaType.DISCRETE, 4), [MetaType.REAL]]))
 
-        return ds_context        
-    
+        return ds_context
     
 
 def save_object(obj, filename):
@@ -406,10 +386,8 @@ def paste_results(result):
     information= "\nRMSE_an=" + str(result[0]) +"\n"+ "RMSE_or="+ str(result[1])  +"\n"+"bias_an="+str(result[4])+"\n"+"bias_or="+ str(result[5])+"\nempirical_SE_an="+str(np.std(result[2])) +"\nempirical_SE_or="+str( np.std(result[3]))+"\nmean_SE_an=" + str(result[6]) +"\n"+ "mean_SE_or="+ str(result[7]) +"\nmean_raw_diff="+str(result[10])+"\nabs_cor_diff="+str(result[11])+"\nuniv_prop_same="+str(result[12])+"\n"           
     # take the average privacy result over all variables
     # and over all individualss
-    # and over all repetitions 
-    
+    # and over all repetitions
 
-    
     # mean_PPP_an= np.mean(result[10])
     # mean_PPP_or= np.mean(result[12])
 
@@ -437,17 +415,16 @@ def paste_results(result):
     result= name+" \ninformation loss\n"+information+privacy+"\n" +"\n" +"\n" +"\n" +"\n" +"\n" +"\n" +"\n" 
 
     return result  
-      
+
+
 def paste_results_original(result):
     
     name=result[-1]
     information= "\n"+ "RMSE_or="+ str(result[0])  +"\n"+"bias_or="+ str(result[2])+"\nempirical_SE_or="+str( np.std(result[1]))+"\n"+ "mean_SE_or="+ str(result[3]) +"\n"           
     # take the average privacy result over all variables
     # and over all individualss
-    # and over all repetitions 
-    
+    # and over all repetitions
 
-    
     mean_PPP_or= np.mean(result[5])
 
     mean_PPP_per_var_or=  np.mean(result[5], axis=(0,1))
@@ -458,13 +435,13 @@ def paste_results_original(result):
     p_PPP_per_var_or=  np.mean(result[5]>0, axis=(0,1))
     
     mean_proximity_per_var_or=  np.mean(result[6], axis=(0,1))
-       
     
     privacy=  "\np_PPP_per_var_or="+ str(p_PPP_per_var_or)+       "\nmean_proximity_per_var_or="+ str(mean_proximity_per_var_or)+       "\nmean_PPP_or="+str( mean_PPP_or)+      "\nPPP_p_or="+str( PPP_p_or)  
     
     result= name+" \ninformation loss\n"+information+"\nprivacy\n"+privacy+"\n" +"\n" +"\n" +"\n" +"\n" +"\n" +"\n" +"\n" 
     return result      
-  
+
+
 def cor_matrix(data):
     d=data.shape[1]
     cors=np.zeros((d,d), dtype=float)
@@ -476,8 +453,6 @@ def cor_matrix(data):
         print(cors)
         
     return cors
-
-
 
 
 def get_ks_p_values(data, AN):
@@ -492,7 +467,6 @@ def compute_freqs(variable):
     df= pd.DataFrame(variable, columns = ['variable'])
     freq= np.array(df['variable'].value_counts())
     return freq
-
 
 
 def get_chi_p_values(data, AN):
@@ -511,7 +485,6 @@ def get_chi_p_values(data, AN):
         an_ind= np.zeros((no_levels))
         or_ind= np.zeros((no_levels))
 
-        
         for l in range(levels.shape[0]):
             an_ind[l]= np.any(levels[l]==unique_AN)
             or_ind[l]= np.any(levels[l]==unique_data)
@@ -527,7 +500,6 @@ def get_chi_p_values(data, AN):
         chi_p_values[i]=chi2_contingency(np.array([AN_freq_full,data_freq_full]))[1]
         
     return chi_p_values
-
 
 
 def save_regression_coefficients(sample):
@@ -586,12 +558,10 @@ def Regression_Simulation(mspn, sims, an_sample_size, data, x_ind, seed, toround
         estimates[i]=result.params[1]
         SEs[i]= result.bse[1]
 
-
     # estimates are the beta parameters that we estimated with the anonymized data
     # SEs are the standard errors corresponding to these beta parameters
     # AN is the last anonymized data set we generated
     return [estimates, SEs, AN]
-
 
 
 def perform_regression_on_anonymized_data(mspn, an_sample_size, data, x_ind, seed, toround, sim):#, x_ind=0):
@@ -605,7 +575,6 @@ def perform_regression_on_anonymized_data(mspn, an_sample_size, data, x_ind, see
     
     n,d=data.shape
     no_sample_sizes= an_sample_size.shape[0]
-    
     
     levels= sim.independent_variables()[-1]
     levels= np.concatenate([levels,np.ones(1)])
@@ -625,7 +594,6 @@ def perform_regression_on_anonymized_data(mspn, an_sample_size, data, x_ind, see
 
     AN_narrow=np.array(AN_narrow)
     AN_narrow= np.round(AN_narrow,2)
-       
     
     AN= np.zeros((an_sample_size[-1],wide_d))
     
@@ -636,8 +604,6 @@ def perform_regression_on_anonymized_data(mspn, an_sample_size, data, x_ind, see
                 AN.T[ind_wide]= (AN_narrow.T[i]==(j+1))
             else:
                 AN.T[ind_wide]= AN_narrow.T[i]
-                
-                
                 
     for i in range(no_sample_sizes):
         # generate anonymized data (first in the narrow format, with the raw categorical variables)
@@ -666,8 +632,6 @@ def sample_from_mspn(mspn, d=9, seed=204, sample_size=1000):
     
     return sample
 
-
-from spn.algorithms.Inference import log_likelihood
 
 def PPP_and_proximity_mspn(data, mspn, sens= "all", p1=25, p2=75, p_reps=500 ):
     # data is the data that we want to test privacy for (original data)
@@ -707,6 +671,7 @@ def PPP_and_proximity_mspn(data, mspn, sens= "all", p1=25, p2=75, p_reps=500 ):
 
     return [PPP,proximity]
 
+
 def PPP_and_proximity_sample(dat, mspn, s, p1=25, p2=95):
     # sample er s per waarde om de prob voor uit te rekenen
 
@@ -723,6 +688,7 @@ def PPP_and_proximity_sample(dat, mspn, s, p1=25, p2=95):
             PPP[i,j]= 1-sum(sample[:,j]==dat[i,j])/s
             
     return [PPP,proximity]
+
 
 # dit is dezelfde funcite maar dan voor de originele data 
 def PPP_and_proximity_original(data, p1=25, p2=75 , sens= "all"):
@@ -753,7 +719,6 @@ def PPP_and_proximity_original(data, p1=25, p2=75 , sens= "all"):
             percs= np.percentile(peers_sensitive, [p1,p2])
             proximity[i,j] =np.absolute(percs[1]-percs[0])
 
-
     return [PPP,proximity]
 
 
@@ -782,16 +747,15 @@ def PoAC_and_proximity_original(data,sim, sens= "all", no_tests=100):
             aux=np.apply_along_axis(np.array2string,1, data[:,np.array(a_ind, dtype=int)])
             # save the sensitive values of the peers
             peers_sensitive= data[aux==aux[i],j]
-                 
         
             if ordered[j]==1:
                 
                 privacy[i,j] = np.sqrt(np.mean((peers_sensitive-data[i,j])**2))
             else:
-                privacy[i,j]= (np.unique(peers_sensitive).shape[0]-1)/levels[j]                
-                                        
+                privacy[i,j]= (np.unique(peers_sensitive).shape[0]-1)/levels[j]
 
     return privacy
+
 
 def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=100 ):
     # data is the data that we want to test privacy for (original data)
@@ -811,7 +775,6 @@ def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=10
     levels= np.concatenate([levels,np.ones(1)])
     levels= np.array(levels, dtype=int)
     privacy= np.zeros((no_tests,d))
- 
 
     # no_tests is the number of individuals for which we evaluate privacy
     # the default is for the first 100 individuals
@@ -838,7 +801,6 @@ def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=10
                     probs_sens[v]=np.exp(log_likelihood(mspn,to_sample_aux))
                     
                 privacy[i,j]=np.sum(probs_sens>0)/domain_false.shape[0]
-                             
                      
             else:                   
                 to_sample_aux= copy.deepcopy(data[i])
@@ -851,7 +813,6 @@ def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=10
                 # later on it might be good to standardize this proximity value
 
     return privacy
-
 
 
 def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None, p_reps=500, distr="normal", sparse=False, mis=100, priv_or_runs=0, priv_an_runs=0, rows=None, H0=False,  or_res=True, pois_real=False, threshold=0.3, leaves=None, toround=True, save=True, cpus=-1, cor_univ=True, col_test="rdc",  hist_source="numpy", cols="rdc", save_inter=True, pois_allreal=False, non_parametric=True, no_tests=100, no_clusters=2, standardize=False, ecdf=False):    
@@ -868,7 +829,6 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     # distr: indicates the data generating model: "normal", "poisson", "categorical" or "mixed
     # n: the sample size of the original data set(s)
     # H0: whether the variable of interest has an effect on the outcome variable (i.e. null or alternative scenario)
-
 
     # 3. settings for privacy
     # p_reps: the number of samples we take from the mspn to estimate proximity
@@ -887,7 +847,6 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     # hist_source: the 
     # col_test: 
     # cols: the splitting method chosen to split variables (vertical splitting), see spn\algorithms\splitting\RDC.py for the options
-    
     
     sim=Simulation(n=n, distr=distr,pois_real=pois_real, pois_allreal= pois_allreal, H0=H0, non_parametric=non_parametric, sparse=sparse)
     true_param= sim.true_param
@@ -918,12 +877,10 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     # voor nu doen we dit even via approximation
     estimates_or=np.zeros((repetitions))
     SEs_or=np.zeros((repetitions))
-    
-    
+
     # create matrices to store privacy results
     privacy=np.zeros((np.min([repetitions,priv_an_runs]),no_tests,d))
     privacy_original=np.zeros((np.min([repetitions,priv_or_runs]),no_tests,d))
-    
 
     diffs=np.zeros((repetitions), dtype=float)
     cor_diffs=np.zeros((repetitions,d,d), dtype=float)
@@ -947,7 +904,6 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     else: 
         Distr="mixed"
         
-        
     for s in range(repetitions):
         
         np.random.seed(seed+s)
@@ -968,7 +924,6 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
             reg_result = sm.OLS(y,xs).fit()
             estimates_or[s]=np.array([reg_result.params[1]])
             SEs_or[s]= np.array([reg_result.bse[1]])
-                        
             
         # change the data from wide to narrow format   
         data= np.zeros((n,9))
@@ -992,11 +947,9 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
         if s<priv_or_runs:
             privacy_original[s]= PoAC_and_proximity_original(data, sim=sim,  no_tests=no_tests)
 
-
         # and for the spn
         if s<priv_an_runs:
             privacy[s]= PoAC_and_proximity_mspn(data, mspn,sim,  p_reps=p_reps, no_tests=no_tests)
-
 
         if cor_univ:
                         
@@ -1048,8 +1001,7 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
             file1.write(str(s)+"___"+str(now)+"___"+name+"\n")
             if s==repetitions-1:
                 file1.write("\n \n \n \n ")
-            file1.close() 
-        
+            file1.close()
 
         print(s, "n =", n, "mis=", mis, "distr=", Distr, "sparse=", sparse, "rows=", rows, "threshold=", threshold, pois , "H0=", H0, "col_test=",col_test, "hist_source=", hist_source, "no_clusters=", no_clusters)        
         
@@ -1061,13 +1013,9 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     bias_an= np.mean(estimates_an-true_param,0)
     SE_mean_an= np.mean(SEs_an, 0)
 
-        
     univ_same_prop= np.mean(univs>.05)
     raw_cor_diff=np.mean(diffs)
     abs_cor_diff=np.mean(raw_diffs)
-        
-    
-        
     
     # save some of the characteristics of the mspn
     print(get_structure_stats(mspn))
@@ -1081,21 +1029,15 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
         result=[RMSE_an,  RMSE_or,  estimates_an,   estimates_or, bias_an,   bias_or, SE_mean_an, SE_mean_or,SEs_an ,SEs_or, raw_cor_diff, abs_cor_diff, univ_same_prop,privacy,  privacy_original, name]
         save_object(result, name)
 
-            
         # save summary of results in output text file
         file1 = open("output.txt","a") 
         file1.write(paste_results(result))
 
+    result=[RMSE_an,  RMSE_or,  estimates_an, estimates_or, bias_an, bias_or, SEs_an ,SEs_or, SE_mean_an, SE_mean_or, raw_cor_diff, abs_cor_diff, univ_same_prop, privacy,  privacy_original, cor_diffs, raw_diffs, univs, data, mspn, name]
 
-    
-    result=[RMSE_an,  RMSE_or,  estimates_an, estimates_or, bias_an, bias_or, SEs_an ,SEs_or, SE_mean_an, SE_mean_or, raw_cor_diff, abs_cor_diff, univ_same_prop, privacy,  privacy_original, cor_diffs, raw_diffs, univs, data, mspn, name]     
-        
-        
     return result
 
 
-
-        
 def View_results(result, priv=False):
     print(["RMSE_an=" ,result[0]])
     print(["RMSE_or=", result[1]])
@@ -1125,7 +1067,6 @@ def View_results(result, priv=False):
         
         mean_proximity_per_var_an=  np.mean(result[7], axis=(0,1))
         mean_proximity_per_var_or=  np.mean(result[9], axis=(0,1))
-        
     
         print(["p_PPP_per_var_an=", p_PPP_per_var_an])
         print(["p_PPP_per_var_or=", p_PPP_per_var_or])
@@ -1138,7 +1079,8 @@ def View_results(result, priv=False):
     
         print(["PPP_p_an=", PPP_p_an])
         print(["PPP_p_or=", PPP_p_or])
-        
+
+
 def load_object(filename):
     import _pickle as cPickle
     with open(filename, "rb") as input_file:
@@ -1153,7 +1095,6 @@ def check_convergence(vect):
     plt.plot(range(vect.shape[0]), means)
         
 
-        
 def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="normal", priv_or_runs=0,  H0=False,pois_real=False, save=False):    
     # mean is average of the true distribution
     # covariance is covariantie die elke variabele heeft met alle andere
@@ -1169,15 +1110,12 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
     # if we want to compare different settings for anonymization it is unneccessary to compute the results for the original data every time
     # threshold is the RDC threshold for the MSPN algorithm
     
-    
     sim=Simulation(n=n, distr=distr,pois_real=pois_real, H0=H0)
     true_param= sim.true_param
-    
-   
+
     estimates_or=np.zeros((repetitions))
     SEs_or=np.zeros((repetitions))
 
-    
     x_ind= range(0,sim.d-1)
     np.random.seed(seed)
     
@@ -1203,8 +1141,6 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
         reg_result = sm.OLS(y,xs).fit()
         estimates_or[s]=np.array([reg_result.params[1]])
         SEs_or[s]= np.array([reg_result.bse[1]])
-         
-        
 
         if s<priv_or_runs:
             privacy_original= PPP_and_proximity_original(data)
@@ -1229,15 +1165,13 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
         os.chdir(current_wd+"/Results")
         save_object(result, name)
 
-            
         # save summary of results in output text file
         file1 = open("output_original.txt","a") 
         file1.write(paste_results_original(result))
         file1.close() 
     else:
         result=[  RMSE_or,    estimates_or,   bias_or, SEs_or, SE_mean_or,  PPP_original, proximity_original, data, name]     
-        
-        
+
     return result
 
 
@@ -1247,6 +1181,7 @@ def compute_CI(result):
     upper_bound= result[4]+2*np.std(result[2])/np.sqrt(no_reps)
     
     return [lower_bound, upper_bound]
+
 
 def print_an_information(result, priv=False):
     print(["RMSE_an=" ,result[0]])
@@ -1282,7 +1217,6 @@ def print_an_information(result, priv=False):
         
         mean_proximity_per_var_an=  np.mean(result[7], axis=(0,1))
         mean_proximity_per_var_or=  np.mean(result[9], axis=(0,1))
-        
     
         print(["p_PPP_per_var_an=", p_PPP_per_var_an])
         print(["p_PPP_per_var_or=", p_PPP_per_var_or])
@@ -1295,21 +1229,15 @@ def print_an_information(result, priv=False):
     
         print(["PPP_p_an=", PPP_p_an])
         print(["PPP_p_or=", PPP_p_or])
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
 def compute_CI_ans(bias, estimates, no_reps):
     
     lower_bound= bias-2*np.std(estimates)/np.sqrt(no_reps)
     upper_bound=bias+2*np.std(estimates)/np.sqrt(no_reps)
     
     return [lower_bound, upper_bound]
+
 
 def print_an_information_ans(result, priv=False):
     ps= np.zeros((int(result[2].shape[1])),dtype=float)
@@ -1328,10 +1256,7 @@ def print_an_information_ans(result, priv=False):
     print(["normal=",ps>.05 ])
        
     print(["CIs=", CIs])
-        
-        
-        
-        
+
         
 def print_inter_information_ans(result, true_param=.3):
     no_reps=result[2].T[-1].shape[0]- np.sum(result[2].T[-1]==0)
@@ -1359,8 +1284,6 @@ def print_inter_information_ans(result, true_param=.3):
     print(CIs)
 
 
-
-    
 def compute_CI_or(result):
     no_reps= result[3].shape[0]
     lower_bound= np.mean(result[3])-2*np.std(result[3])/np.sqrt(no_reps)
