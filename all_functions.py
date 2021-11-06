@@ -22,29 +22,25 @@ import os
 
 current_wd = os.getcwd()
 
-import matplotlib.pyplot as plt
-import spn as spn
-import math
-import numpy as np
 import copy
+import datetime
+import math
+import pickle
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
 from numpy.random.mtrand import RandomState
+from scipy.stats import chi2_contingency, expon, ks_2samp, norm, poisson
+from scipy.stats.stats import pearsonr
+from sklearn.linear_model import LinearRegression
+from spn.algorithms.Inference import log_likelihood
+from spn.algorithms.LearningWrappers import learn_mspn
 from spn.algorithms.Sampling import sample_instances
+from spn.algorithms.Statistics import get_structure_stats
 from spn.structure.Base import Context
 from spn.structure.StatisticalTypes import MetaType
-from spn.algorithms.LearningWrappers import learn_mspn
-from sklearn import linear_model
-import statsmodels.api as sm
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
-from spn.algorithms.Inference import log_likelihood
-from spn.algorithms.Statistics import get_structure_stats
-import statsmodels.api as sm
-from scipy.stats import ks_2samp
-from scipy.stats.stats import pearsonr
-import datetime  
-import pandas as pd
-from scipy.stats import chi2_contingency, norm, binom, poisson, expon
-import pickle
 
 
 class Simulation():
