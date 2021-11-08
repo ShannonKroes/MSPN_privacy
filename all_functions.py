@@ -757,41 +757,41 @@ def PPP_and_proximity_original(data, p1=25, p2=75 , sens= "all"):
     return [PPP,proximity]
 
 
-def PoAC_and_proximity_original(data,sim, sens= "all", no_tests=100):
-    # With this function we compute privacy for the original data.
-    # data is the data for which is want to compute privacy
-    # sens indicates a range of indices corresponding to the variables we consider to be sensitive
-    # the default is that we consider all variables to be potentially sensitive.
-    # this function also assess privacy for maximum auxiliary information onl, i.e. all variables can be used as background information.
-    # ordered is a binary or True False vector indicating which variables are ordered
-    # e.g. if we have 5 variables, of which the first three are ordered the vector can be [1,1,1,0,0]
-    ordered=sim.ordered_narrow()
-    levels= sim.independent_variables()[-1]
-    n,d= data.shape
+def PoAC_and_proximity_original(data, sim, no_tests=100):
+    """With this function we compute privacy for the original data.
+    This function also assess privacy for maximum auxiliary information onl,
+    i.e. all variables can be used as background information.
 
-    levels= np.concatenate([levels,np.ones(1)])
-    levels= np.array(levels, dtype=int)
+    Optimized by Sander van Rijn <s.j.van.rijn@liacs.leidenuniv.nl> ORCID: 0000-0001-6159-041X
 
-    privacy= np.zeros((no_tests,d))
+    :param data:      Data for which is want to compute privacy. Order is assumed to be random.
+    :param sim:       Simulation specification
+    :param no_tests:  Number of tests to perform
+    """
+
+    n, d = data.shape
+    levels = sim.independent_variables()[-1]
+    levels = np.concatenate([levels, [1]]).astype(int)
+    ordered = sim.ordered_narrow()
+
+    privacy = np.zeros((no_tests, d))
 
     for i in range(no_tests):
+        aux = data == data[i]
         for j in range(d):
             # save the indices the variables that will serve as auxiliary information
-            a_ind=np.concatenate([ range(0,j), range(j+1,d)])
-            # paste the auxiliary information of every individual to find the  peers
-            aux=np.apply_along_axis(np.array2string,1, data[:,np.array(a_ind, dtype=int)])
-            # save the sensitive values of the peers
-            peers_sensitive= data[aux==aux[i],j]
-                 
-        
-            if ordered[j]==1:
-                
+            a_ind = np.concatenate([np.arange(j), np.arange(j+1,d)])
+
+            indices = np.all(aux[:, a_ind], axis=1)
+            peers_sensitive = data[indices,j]
+
+            if ordered[j] == 1:
                 privacy[i,j] = np.sqrt(np.mean((peers_sensitive-data[i,j])**2))
             else:
-                privacy[i,j]= (np.unique(peers_sensitive).shape[0]-1)/levels[j]                
-                                        
+                privacy[i,j] = (np.unique(peers_sensitive).shape[0]-1)/levels[j]
 
     return privacy
+
 
 def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=100 ):
     # data is the data that we want to test privacy for (original data)
