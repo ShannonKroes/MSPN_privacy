@@ -50,8 +50,7 @@ class Simulation():
 
     @staticmethod
     def sample_bin(p):
-            x=np.random.choice([0, 1], size=1, p=[1-p,p])
-            return x
+        return np.random.choice([0, 1], size=1, p=[1-p,p])
 
 
     @staticmethod
