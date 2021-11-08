@@ -776,11 +776,11 @@ def PoAC_and_proximity_original(data, sim, no_tests=100):
 
     privacy = np.zeros((no_tests, d))
 
+    a_indices = column_exclusion_indices(n)
+
     for i in range(no_tests):
         aux = data == data[i]
-        for j in range(d):
-            # save the indices the variables that will serve as auxiliary information
-            a_ind = np.concatenate([np.arange(j), np.arange(j+1,d)])
+        for j, a_ind in enumerate(a_indices):
 
             indices = np.all(aux[:, a_ind], axis=1)
             peers_sensitive = data[indices,j]
@@ -791,6 +791,23 @@ def PoAC_and_proximity_original(data, sim, no_tests=100):
                 privacy[i,j] = (np.unique(peers_sensitive).shape[0]-1)/levels[j]
 
     return privacy
+
+
+def column_exclusion_indices(n):
+    """Create a series of index vectors to exclude each column once
+
+    :param n: number of columns
+
+    Example:
+    >>> column_exclusion_indices(3)
+    ... array([[1, 2],   # omits 0
+    ...        [0, 2],   # omits 1
+    ...        [0, 1]])  # omits 2
+    """
+    return np.array([
+        [x for x in range(n) if x != j]
+        for j in range(n)
+    ])
 
 
 def PoAC_and_proximity_mspn(data,mspn, sim, sens= "all", p_reps=500, no_tests=100 ):
