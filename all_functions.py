@@ -776,7 +776,7 @@ def PoAC_and_proximity_original(data, sim, no_tests=100):
 
     privacy = np.zeros((no_tests, d))
 
-    a_indices = column_exclusion_indices(n)
+    a_indices = column_exclusion_indices(d)
 
     for i in range(no_tests):
         aux = data == data[i]
