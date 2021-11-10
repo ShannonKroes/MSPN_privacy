@@ -47,6 +47,8 @@ import pandas as pd
 from scipy.stats import chi2_contingency, norm, binom, poisson, expon
 import pickle
 
+from functools import partial
+from multiprocessing import Pool, cpu_count
 
 class Simulation():
     # We use this class to generate data for the simulation
@@ -774,23 +776,32 @@ def PoAC_and_proximity_original(data, sim, no_tests=100):
     levels = np.concatenate([levels, [1]]).astype(int)
     ordered = sim.ordered_narrow()
 
-    privacy = np.zeros((no_tests, d))
-
     a_indices = column_exclusion_indices(d)
+    func = partial(_single_PoAC_test, data=data, levels=levels, ordered=ordered, a_indices=a_indices)
 
-    for i in range(no_tests):
-        aux = data == data[i]
-        for j, a_ind in enumerate(a_indices):
+    with Pool(cpu_count()) as p:
+        privacy = p.map(func, range(no_tests))
 
-            indices = np.all(aux[:, a_ind], axis=1)
-            peers_sensitive = data[indices,j]
+    return np.array(privacy)
 
-            if ordered[j] == 1:
-                privacy[i,j] = np.sqrt(np.mean((peers_sensitive-data[i,j])**2))
-            else:
-                privacy[i,j] = (np.unique(peers_sensitive).shape[0]-1)/levels[j]
 
-    return privacy
+def _single_PoAC_test(i, data, levels, ordered, a_indices):
+    """Parallelizable helper function that performs a single test of the
+    PoAC_and_proximity_original function
+    """
+    privacies = []
+    aux = data == data[i]
+    for j, a_ind in enumerate(a_indices):
+        indices = np.all(aux[:, a_ind], axis=1)
+        peers_sensitive = data[indices, j]
+
+        if ordered[j] == 1:
+            privacy = np.sqrt(np.mean((peers_sensitive - data[i, j]) ** 2))
+        else:
+            privacy = (np.unique(peers_sensitive).shape[0] - 1) / levels[j]
+        privacies.append(privacy)
+
+    return privacies
 
 
 def column_exclusion_indices(n):
