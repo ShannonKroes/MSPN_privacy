@@ -385,7 +385,7 @@ def PPP_and_proximity_original(data, p1=25, p2=75 , sens= "all"):
     return [PPP,proximity]
 
 
-def PoAC_and_proximity_original(data, sim, no_tests=100):
+def PoAC_and_proximity_original(data, sim, no_tests=None):
     """With this function we compute privacy for the original data.
     This function also assess privacy for maximum auxiliary information onl,
     i.e. all variables can be used as background information.
@@ -397,6 +397,9 @@ def PoAC_and_proximity_original(data, sim, no_tests=100):
     :param no_tests:  Number of tests to perform
     """
     n, d = data.shape
+    if no_tests is None:
+        no_tests = n
+
     levels = sim.independent_variables()[-1]
     levels = np.concatenate([levels, [1]]).astype(int)
     ordered = sim.ordered_narrow()
