@@ -34,76 +34,6 @@ from simulation import Simulation
 
 def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None, p_reps=500, distr="normal", sparse=False, mis=100, priv_or_runs=0, priv_an_runs=0, rows=None, H0=False,  or_res=True, pois_real=False, threshold=0.3, toround=True, save=True, cor_univ=True, save_inter=True, no_tests=100, no_clusters=2, standardize=False):    
     '''
-    
-
-    Parameters
-    ----------
-    n : TYPE, optional
-        DESCRIPTION. The default is 100.
-    seed : TYPE, optional
-        DESCRIPTION. The default is 1919.
-    repetitions : TYPE, optional
-        DESCRIPTION. The default is 1.
-    an_sample_size : TYPE, optional
-        DESCRIPTION. The default is None.
-    p_reps : TYPE, optional
-        DESCRIPTION. The default is 500.
-    distr : TYPE, optional
-        DESCRIPTION. The default is "normal".
-    sparse : TYPE, optional
-        DESCRIPTION. The default is False.
-    mis : TYPE, optional
-        DESCRIPTION. The default is 100.
-    priv_or_runs : TYPE, optional
-        DESCRIPTION. The default is 0.
-    priv_an_runs : TYPE, optional
-        DESCRIPTION. The default is 0.
-    rows : TYPE, optional
-        DESCRIPTION. The default is None.
-    H0 : TYPE, optional
-        DESCRIPTION. The default is False.
-    or_res : TYPE, optional
-        DESCRIPTION. The default is True.
-    pois_real : TYPE, optional
-        DESCRIPTION. The default is False.
-    threshold : TYPE, optional
-        DESCRIPTION. The default is 0.3.
-    leaves : TYPE, optional
-        DESCRIPTION. The default is None.
-    toround : TYPE, optional
-        DESCRIPTION. The default is True.
-    save : TYPE, optional
-        DESCRIPTION. The default is True.
-    cpus : TYPE, optional
-        DESCRIPTION. The default is -1.
-    cor_univ : TYPE, optional
-        DESCRIPTION. The default is True.
-    col_test : TYPE, optional
-        DESCRIPTION. The default is "rdc".
-    hist_source : TYPE, optional
-        DESCRIPTION. The default is "numpy".
-    cols : TYPE, optional
-        DESCRIPTION. The default is "rdc".
-    save_inter : TYPE, optional
-        DESCRIPTION. The default is True.
-    pois_allreal : TYPE, optional
-        DESCRIPTION. The default is False.
-    non_parametric : TYPE, optional
-        DESCRIPTION. The default is True.
-    no_tests : TYPE, optional
-        DESCRIPTION. The default is 100.
-    no_clusters : TYPE, optional
-        DESCRIPTION. The default is 2.
-    standardize : TYPE, optional
-        DESCRIPTION. The default is False.
-    ecdf : TYPE, optional
-        DESCRIPTION. The default is False.
-
-    Returns
-    -------
-    None.
-
-
     we can make a distinction for the input between:
     1. generic simulation settings
     sims: the number of anonymized data sets we generate for 1 original data set, which is always set to 1 in practice
@@ -148,7 +78,6 @@ def simulation_spn_privacy( n=100, seed=1919, repetitions=1, an_sample_size=None
     estimates_an=np.zeros((repetitions,no_an_sample_sizes))
     SEs_an=np.zeros((repetitions,no_an_sample_sizes))
     # save the true parameters
-    # voor nu doen we dit even via approximation
     estimates_or=np.zeros((repetitions))
     SEs_or=np.zeros((repetitions))
     # create matrices to store privacy results
@@ -364,15 +293,10 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
     # if we want to compare different settings for anonymization it is unneccessary to compute the results for the original data every time
     # threshold is the RDC threshold for the MSPN algorithm
     
-    
     sim=Simulation(n=n, distr=distr,pois_real=pois_real, H0=H0)
     true_param= sim.true_param
-    
-   
     estimates_or=np.zeros((repetitions))
     SEs_or=np.zeros((repetitions))
-
-    
     x_ind= range(0,sim.d-1)
     np.random.seed(seed)
     
@@ -381,25 +305,19 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
     proximity_original=np.zeros((priv_or_runs,n,sim.d))
 
     for s in range(repetitions):
-        
         np.random.seed(seed+s)
         sim=Simulation(n=n, distr=distr,pois_real=pois_real, H0=H0)
         data= sim.generate_data()
-
-        # bereken eerst regr in sample om te kijken of het wel goed gaat met afronden naar 2 decimalen
-
         xs=data[:,x_ind]
         # we add ones so that we have an intercept
         xs= np.hstack([np.ones(n).reshape(n,1), xs])
         y=data[:,sim.d-1]
-    # we only take the index of the independent variable
-    # which we assume to be the first variable
-    # we save the beta parameter estimate and the SE of the first variable
+        # we only take the index of the independent variable
+        # which we assume to be the first variable
+        # we save the beta parameter estimate and the SE of the first variable
         reg_result = sm.OLS(y,xs).fit()
         estimates_or[s]=np.array([reg_result.params[1]])
         SEs_or[s]= np.array([reg_result.bse[1]])
-         
-        
 
         if s<priv_or_runs:
             privacy_original= PPP_and_proximity_original(data)
@@ -407,13 +325,10 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
             proximity_original[s]= privacy_original[1] 
 
     RMSE_or=  np.sqrt(np.mean((estimates_or-true_param)**2)) 
-
     bias_or= np.mean(estimates_or-true_param)
-    
     SE_mean_or= np.mean(SEs_or)
     
     # save some of the characteristics of the mspn
-
     H='H1'
     if H0==True: H='H0' 
     # save output as object
@@ -423,16 +338,12 @@ def simulation_original_data( n=100, seed=1919, sims=1, repetitions=1,  distr="n
         result=[ RMSE_or,    estimates_or,   bias_or, SE_mean_or,SEs_or,   PPP_original, proximity_original, name]
         os.chdir(current_wd+"/Results")
         save_object(result, name)
-
-            
         # save summary of results in output text file
         file1 = open("output_original.txt","a") 
         file1.write(paste_results_original(result))
         file1.close() 
     else:
         result=[  RMSE_or,    estimates_or,   bias_or, SEs_or, SE_mean_or,  PPP_original, proximity_original, data, name]     
-        
-        
     return result
 
 
@@ -440,7 +351,6 @@ def compute_CI(result):
     no_reps= result[2].shape[0]
     lower_bound= result[4]-2*np.std(result[2])/np.sqrt(no_reps)
     upper_bound= result[4]+2*np.std(result[2])/np.sqrt(no_reps)
-    
     return [lower_bound, upper_bound]
 
 def print_an_information(result, priv=False):
@@ -454,40 +364,28 @@ def print_an_information(result, priv=False):
     p= ks_2samp(result[2], pop).pvalue 
     print(["normal=",p>.05 ])
     print(["CI=",compute_CI(result) ])
-
     # take the average privacy result over all variables
     # and over all individuals
     # and over all repetitions 
-    
     if priv==True:
                   
-        print()
         mean_PPP_an= np.mean(result[6])
         mean_PPP_or= np.mean(result[8])
-    
         mean_PPP_per_var_an=  np.mean(result[6], axis=(0,1))
         mean_PPP_per_var_or=  np.mean(result[8], axis=(0,1))
-        
         #See if ppp is above threshold 0
         PPP_p_an=  np.mean(result[6]>0, axis=(0,1))
         PPP_p_or=  np.mean(result[8]>0, axis=(0,1))
-        
         p_PPP_per_var_an=  np.mean(result[6]>0, axis=(0,1))
         p_PPP_per_var_or=  np.mean(result[8]>0, axis=(0,1))
-        
         mean_proximity_per_var_an=  np.mean(result[7], axis=(0,1))
         mean_proximity_per_var_or=  np.mean(result[9], axis=(0,1))
-        
-    
         print(["p_PPP_per_var_an=", p_PPP_per_var_an])
         print(["p_PPP_per_var_or=", p_PPP_per_var_or])
-        
         print(["mean_proximity_per_var_an=", mean_proximity_per_var_an])
         print(["mean_proximity_per_var_or=", mean_proximity_per_var_or])
-        
         print(["mean_PPP_an=", mean_PPP_an])
         print(["mean_PPP_or=", mean_PPP_or])
-    
         print(["PPP_p_an=", PPP_p_an])
         print(["PPP_p_or=", PPP_p_or])
         
@@ -514,7 +412,6 @@ def print_an_information_ans(result, priv=False):
         ps[i]= ks_2samp(result[2].T[i], pop).pvalue 
         CIs[i]= compute_CI_ans(result[4][i], result[2].T[i], result[2].T[0].shape[0])
     print(["normal=",ps>.05 ])
-       
     print(["CIs=", CIs])
         
         
@@ -526,21 +423,17 @@ def print_inter_information_ans(result, true_param=.3):
     CIs= np.zeros((result[2].shape[1]), dtype=list)
     for i in range(result[2].shape[1]):
         result_i=result[2].T[i][0:no_reps]
-                   
         lower_bound= np.mean(result_i)-2*np.std(result_i)/np.sqrt(no_reps) # 0.29108434164613006
         upper_bound= np.mean(result_i)+2*np.std(result_i)/np.sqrt(no_reps) # 0.30379596690869626
         CIs[i]= [lower_bound, upper_bound]
     #  empirical SE
     print(" empirical SE:")
     print(np.std(result[2][0:no_reps], 0))
-    
     # bias
     print(" mean parameter:")
     print(np.mean(result[2][0:no_reps], 0))
-    
     print(" bias")
     print(np.mean(result[2][0:no_reps], 0)-true_param)
-    
     print(" mean estimated SE:")
     print(np.mean(result[8][0:no_reps], 0))
     print("CIs:")
