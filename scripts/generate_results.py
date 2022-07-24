@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 In this file we generate the privacy and information loss results. It takes a long time to run this code, so it is not adviced on a personal computer.
-Please find a test run under scripts.tests.privacy_test.py and the full results can be found in the folder results.privacy. 
+Please find a test run under scripts.privacy_test.py and the full results can be found in the folder results.privacy. 
 """
 import os
 from evaluate_privacy_information_loss import simulation_spn_privacy
