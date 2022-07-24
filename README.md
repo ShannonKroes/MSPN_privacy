@@ -18,7 +18,7 @@ The file anonymize_data_with_mspn contains the function of the same name, which 
 
 
 
-For any questions, please send an email to shannonkroes@hotmail.com
+For any questions, please send an email to m.janssen@sanquin.nl
 
 ## Installation
 
