@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-In this file we generate the privacy results. It takes a long time to run this code, so it is not adviced on a personal computer.
+In this file we generate the privacy and information loss results. It takes a long time to run this code, so it is not adviced on a personal computer.
 Please find a test run under scripts.tests.privacy_test.py and the full results can be found in the folder results.privacy. 
 """
 import os
