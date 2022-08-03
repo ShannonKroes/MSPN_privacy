@@ -21,6 +21,12 @@ from simulation import Simulation
 sim = Simulation()
 data = sim.generate_data()
 ```
+Then we can anonymize these data with the anonymize_data function:
+
+```python
+from source.anonymize_data import anonymize_data
+anonymize_data(data)
+```
 
 ## Installation
 
