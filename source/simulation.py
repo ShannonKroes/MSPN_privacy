@@ -7,7 +7,7 @@ import copy
 from spn.structure.Base import Context
 from spn.structure.StatisticalTypes import MetaType
 from scipy.stats import chi2_contingency, norm, binom, poisson, expon
-
+import math 
 class Simulation():
     '''
     We use this class to generate data for the simulation and to indicate variable types, which will be used as input for the construction of the MSPN.  
