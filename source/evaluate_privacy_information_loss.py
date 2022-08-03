@@ -389,6 +389,71 @@ def print_an_information(result, priv=False):
         print(["PPP_p_an=", PPP_p_an])
         print(["PPP_p_or=", PPP_p_or])
         
+
+def perform_regression_on_anonymized_data(mspn, an_sample_size, data, x_ind, seed, toround, sim):#, x_ind=0):
+    # in this function we will estimate a regression on different samples of the mixed sum product network (MSPN) 
+    # spn is the sum product network from which we will sample data
+    # sims are the number of times we will repeat the procedure
+    # we will assume that y will be predicted by all other x values. 
+    # sample size is the number of records we want to have to perform the regression analysis on
+    # y_ind is the index that indicates the dependent variable
+    # all other variables are treated as independent variables.
+    
+    n,d=data.shape
+    no_sample_sizes= an_sample_size.shape[0]
+    
+    
+    levels= sim.independent_variables()[-1]
+    levels= np.concatenate([levels,np.ones(1)])
+    levels= np.array(levels, dtype=int)
+    ordered=sim.ordered()
+    wide_d= np.sum(levels)
+    
+    # x_ind= np.concatenate([range(1,y_ind), range(y_ind,p-1)])
+    # we compute the regression coefficient for every variable in the data
+    # and also save the corresponding standard error
+    estimates= np.zeros((no_sample_sizes))
+    SEs_corr= np.zeros((no_sample_sizes))
+
+    y_ind=sim.d-1
+    AN_narrow= sample_instances(mspn, np.array([[np.repeat(np.nan,d)] * an_sample_size[-1]]).reshape(-1, data.shape[1]), RandomState(seed))
+    #xs=sample[:,np.array(x_ind, dtype=int)]
+
+    AN_narrow=np.array(AN_narrow)
+    AN_narrow= np.round(AN_narrow,2)
+       
+    
+    AN= np.zeros((an_sample_size[-1],wide_d))
+    
+    for i in range(9):  
+        for j in range(levels[i]):
+            ind_wide=np.sum(levels[0:i])+j
+            if ordered[ind_wide]==0:
+                AN.T[ind_wide]= (AN_narrow.T[i]==(j+1))
+            else:
+                AN.T[ind_wide]= AN_narrow.T[i]
+                
+                
+                
+    for i in range(no_sample_sizes):
+        # generate anonymized data (first in the narrow format, with the raw categorical variables)
+        AN_i= AN[0:an_sample_size[i]]  
+
+        xs=AN_i[:,x_ind]
+        # we add ones so that we have an intercept
+        xs= np.hstack([np.ones(an_sample_size[i]).reshape(an_sample_size[i], 1), xs])
+        y=AN_i[:,y_ind]
+        
+        result = sm.OLS(y,xs).fit()
+        
+        estimates[i]=result.params[1]
+        # we correct the standard errors for the increase in sample size
+        SEs_corr[i]= result.bse[1]*np.sqrt(an_sample_size[i])/np.sqrt(n)
+
+    # estimates are the beta parameters that we estimated with the anonymized data
+    # SEs are the standard errors corresponding to these beta parameters
+    # AN is the last anonymized data set we generated
+    return [estimates, SEs_corr, AN_narrow]
              
 def compute_CI_ans(bias, estimates, no_reps):
     
