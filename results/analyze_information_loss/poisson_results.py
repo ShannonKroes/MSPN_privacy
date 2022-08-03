@@ -5,12 +5,13 @@ Created on Tue Aug 10 00:08:47 2021
 @author: Shannon
 """
 import os
-os.chdir(r"C:\Users\Shannon\Documents\Sanquin\Project 4")
-from all_functions import *
+os.chdir(r"~\source")
+from base import *
+from simulation import Simulation
 from scipy import stats
 from statsmodels.stats.power import tt_solve_power
 import pickle as cPickle
-os.chdir(r"C:\Users\Shannon\Documents\Sanquin\Project 4\Results\Final information loss results")
+os.chdir(r"~\results\information_loss")
 sim_n=Simulation(distr="poisson")
 mean_diff= sim_n.true_param/20
 
