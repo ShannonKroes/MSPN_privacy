@@ -13,6 +13,8 @@ The results folder contains all the result objects and the code to analyze these
 
 For any questions please send an email to m.janssen@sanquin.nl
 
+## Example
+
 ## Installation
 
 To be able to run the code in this repository, follow the instructions below.
