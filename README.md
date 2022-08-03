@@ -14,6 +14,13 @@ The results folder contains all the result objects and the code to analyze these
 For any questions please send an email to m.janssen@sanquin.nl
 
 ## Example
+A data set can easily be generated with the Simulation class as follows:
+
+```python
+from simulation import Simulation
+sim = Simulation()
+data = sim.generate_data()
+```
 
 ## Installation
 
