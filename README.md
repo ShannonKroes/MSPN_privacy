@@ -24,6 +24,7 @@ from source.anonymize_data import anonymize_data
 synthetic_data = anonymize_data(data)
 ```
 
+Note that your own data can also be anonymized, if it is formatted as a numpy array.
 ## Installation
 
 To be able to run the code in this repository, follow the instructions below.
