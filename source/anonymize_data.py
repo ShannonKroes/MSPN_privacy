@@ -7,7 +7,7 @@ Created on Wed Aug  3 11:14:40 2022
 
 
 import os
-os.chdir(r"C:\Users\Shannon\Documents\Sanquin\Project 4\MSPN_privacy\source")
+#os.chdir(r"")
 import numpy as np 
 import spn
 from spn.algorithms.Sampling import sample_instances
