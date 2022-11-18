@@ -4,27 +4,20 @@ Created on Wed Aug  3 11:14:40 2022
 
 @author: Shannon
 """
-
-
 import os
-#os.chdir(r"")
+file_wd = os.path.dirname(os.path.abspath(__file__))
+os.chdir(file_wd)
 import numpy as np 
-import spn
 from spn.algorithms.Sampling import sample_instances
 current_wd = os.getcwd()
-import matplotlib.pyplot as plt
-import spn as spn
-import numpy as np
-import copy
 from numpy.random.mtrand import RandomState
-from spn.algorithms.Sampling import sample_instances
 from spn.structure.Base import Context
 from spn.structure.StatisticalTypes import MetaType
 from spn.algorithms.LearningWrappers import learn_mspn
 from base import save_object
 
 
-def anonymize_data(data, an_sample_size=100000, discrete=None, no_clusters=None, seed=1901, save_mspn=False, file_dest=None):
+def anonymize_data(data, an_sample_size=100000, discrete=None, no_clusters=None, seed=1901, save_mspn=False, file_dest=None, rows = "kmeans", parties = None):
     '''
     Function to anonymize a data set. 
     
@@ -41,6 +34,8 @@ def anonymize_data(data, an_sample_size=100000, discrete=None, no_clusters=None,
     seed = int: specfying the seed (optional)
     save_mspn = bool: whether the mspn is saved in destination folder "file_dest"
     file_dest = str: path to folder where mspn should be saved. 
+    rows = str: the method used to cluster the data. 
+    parties = list: distribution of variables between parties, only required to test the approach in a distributed setting. 
     
     Output
     AN = numpy array: contains synthetic, anonymized data with the same number of variables as "data" and 
@@ -60,7 +55,7 @@ def anonymize_data(data, an_sample_size=100000, discrete=None, no_clusters=None,
         
         
     print("working on mspn...")
-    mspn = learn_mspn(data, ds_context, min_instances_slice=n-1, rows="kmeans", threshold=-1,no_clusters=no_clusters, standardize=True)    
+    mspn = learn_mspn(data, ds_context, min_instances_slice=n-1, rows=rows, threshold=-1,no_clusters=no_clusters, standardize=True, parties = parties)    
     if save_mspn:
         os.chdir(file_dest)
         save_object(mspn, "mspn")
