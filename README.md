@@ -56,7 +56,7 @@ import pandas as pd
 import numpy as np
 my_data = pd.read_csv("my_data.csv").to_numpy()
 discrete =  np.array([0,1])
-synthetic_data = anonymize_data(data)
+synthetic_data = anonymize_data(my_data, discrete = discrete)
 ```
 Note that we assume that all uniquely identifying information has been removed from "my_data", such as names, adresses, etc and that the 2D array consists of n rows (one for every individual) that all consists of d elements (one for every variable), i.e. the shape is (n,d). In this example we have indicated that the first two variables are discrete-valued and the rest is continuous. Please see the documentation in anonymize_data.py for more details about how to specify which variables should be considered discrete or continuous. Note that these are the only two inputs that are needed to synthesize the data: your data as a numpy array and a numpy array indicating the indices of variables that are discrete (if you have only continuous values you only have to add the data). 
 
