@@ -9,6 +9,31 @@ The folder "source" contains all the functions required to run the simulations a
 
 For any questions please send an email to m.janssen@sanquin.nl
 
+```
+# Clone the repository
+git clone git@github.com:ShannonKroes/MSPN_privacy.git
+cd MSPN_privacy
+
+# Create a local conda virtual environment
+conda create -n myenv python=3.8
+conda activate myenv
+Here, "myenv" should be replaced by the repository name of your choosing.
+
+# Install the IDE fo your choosing, e.g.
+conda install spyder
+
+# Install the required packages
+pip install spn
+pip install mpyc
+
+# Add the altered spn package
+Find Anaconda in your Program Files and go to envs/myenv/Lib/site-packages and delete the folder called spn.
+Then add MSPN_privacy/source/spn in envs/myenv/Lib/site-packages. 
+
+You're all set! Please let us know if you have any questions.
+
+```
+
 ## Example
 A data set can easily be generated with the Simulation class as follows:
 
@@ -23,29 +48,16 @@ Then we can anonymize these data with the anonymize_data function:
 from source.anonymize_data import anonymize_data
 synthetic_data = anonymize_data(data)
 ```
+Note that your own data can also be anonymized, if it is formatted as a numpy array. For example:
 
-Note that your own data can also be anonymized, if it is formatted as a numpy array.
-## Installation
-
-To be able to run the code in this repository, follow the instructions below.
-These instructions assume you have a working Python 3 installation.
-
+```python
+import pandas as pd
+import numpy as np
+my_data = pd.read_csv("my_data.csv").to_numpy()
+discrete =  np.array([0,1])
+synthetic_data = anonymize_data(data)
 ```
-# Clone the repository
-git clone git@github.com:ShannonKroes/MSPN_privacy.git
-cd MSPN_privacy
-
-# Create a local virtual environment
-python -m venv venv
-
-# Activate the virtual environment
-source venv/bin/activate      # Unix
-# -OR- 
-source venv/Scripts/activate  # Windows
-
-# Install required packages
-pip install -r requirements.txt
-```
+Note that we assume that all uniquely identifying information has been removed from "my_data", such as names, adresses, etc and that the 2D array consists of n rows (one for every individual) that all consists of d elements (one for every variable), i.e. the shape is (n,d). In this example we have indicated that the first two variables are discrete-valued and the rest is continuous. Please see the documentation in anonymize_data.py for more details about how to specify which variables should be considered discrete or continuous. Note that these are the only two inputs that are needed to synthesize the data: your data as a numpy array and a numpy array indicating the indices of variables that are discrete (if you have only continuous values you only have to add the data). 
 
 Link to paper: https://pubmed.ncbi.nlm.nih.gov/36228120/
 
