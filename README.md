@@ -9,6 +9,9 @@ The folder "source" contains all the functions required to run the simulations a
 
 For any questions please send an email to m.janssen@sanquin.nl
 
+## Installation
+("myenv" should be replaced by the repository name of your choosing)
+
 ```
 # Clone the repository
 git clone git@github.com:ShannonKroes/MSPN_privacy.git
@@ -22,17 +25,16 @@ conda activate myenv
 conda install spyder
 
 # Install the required packages
-pip install spn
+pip install spflow
 pip install mpyc
 
-# Add the altered spn package
+```
+And an important final step: add the altered spn package
 Find Anaconda in your Program Files and go to envs/myenv/Lib/site-packages and delete the folder called spn.
 Then add MSPN_privacy/source/spn in envs/myenv/Lib/site-packages. 
-
 You're all set! Please let us know if you have any questions.
 
-```
-Here, "myenv" should be replaced by the repository name of your choosing.
+
 ## Example
 A data set can easily be generated with the Simulation class as follows:
 
