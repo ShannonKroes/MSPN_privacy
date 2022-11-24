@@ -17,7 +17,6 @@ cd MSPN_privacy
 # Create a local conda virtual environment
 conda create -n myenv python=3.8
 conda activate myenv
-Here, "myenv" should be replaced by the repository name of your choosing.
 
 # Install the IDE fo your choosing, e.g.
 conda install spyder
@@ -33,7 +32,7 @@ Then add MSPN_privacy/source/spn in envs/myenv/Lib/site-packages.
 You're all set! Please let us know if you have any questions.
 
 ```
-
+Here, "myenv" should be replaced by the repository name of your choosing.
 ## Example
 A data set can easily be generated with the Simulation class as follows:
 
