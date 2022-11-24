@@ -1,1 +1,0 @@
-In this file we extract the privacy results for Table 2-4 and A1-A3. Though the number of repetitions differs per output object, every scenario has been repeated at least ten times. 
