@@ -29,7 +29,7 @@ pip install spflow
 pip install mpyc
 
 ```
-And an important final step: add the altered spn package
+And an important final step: add the altered spn package.
 Find Anaconda in your Program Files and go to envs/myenv/Lib/site-packages and delete the folder called spn.
 Then add MSPN_privacy/source/spn to envs/myenv/Lib/site-packages. 
 You're all set! Please let us know if you have any questions.
