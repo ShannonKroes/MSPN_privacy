@@ -1,7 +1,7 @@
 """
 Created on March 25, 2018
 
-@author: Alejandro Molina
+@author: Alejandro Molina, edits by Shannon Kroes
 """
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
